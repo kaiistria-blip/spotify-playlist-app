@@ -107,4 +107,6 @@ if __name__ == "__main__":
     # start scheduler in background
     threading.Thread(target=run_scheduler, daemon=True).start()
 
-    app.run(port=5000)
+    if __name__ == "__main__":
+        threading.Thread(target=run_scheduler, daemon=True).start()
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
