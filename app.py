@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 CLIENT_ID = "3098f91adf5547ecb3214339a0e8bd51"
 CLIENT_SECRET = "a646012b50ad4fdd8218192ecec29632"
-REDIRECT_URI = "http://127.0.0.1:5000/callback"
+REDIRECT_URI = "https://spotify-playlist-app-ntpf.onrender.com/callback"
 
 SCOPE = "playlist-modify-public playlist-modify-private playlist-read-private user-top-read playlist-read-collaborative"
 
