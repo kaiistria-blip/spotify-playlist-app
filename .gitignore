@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+.spotify_cache
+.cache
+tokens/
+played_tracks.json
