@@ -6,6 +6,9 @@ import os
 
 from main import run_playlist_builder
 
+if not os.path.exists("tokens"):
+    os.makedirs("tokens")
+
 app = Flask(__name__)
 
 CLIENT_ID = "3098f91adf5547ecb3214339a0e8bd51"
