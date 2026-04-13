@@ -84,32 +84,26 @@ def run_all_users():
         except Exception as e:
             print(f"Failed for {file}: {e}")
 
-@app.route("/run_all")
+is_running = False
+
+@app.route("/run_all", methods=["GET"])
 def run_all():
+    global is_running
+
     print("RUN_ALL TRIGGERED")
-    run_all_users()
+
+    if is_running:
+        print("Already running — skipping")
+        return "Already running"
+
+    is_running = True
+
+    try:
+        run_all_users()
+    finally:
+        is_running = False
+
     return "Updated all users"
 
-import schedule
-import time
-import threading
-
-def daily_job():
-    print("=== DAILY JOB START ===")
-    run_all_users()
-    print("=== DAILY JOB END ===")
-
-def run_scheduler():
-    schedule.every().day.at("04:00").do(daily_job)
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
 if __name__ == "__main__":
-    # start scheduler in background
-    threading.Thread(target=run_scheduler, daemon=True).start()
-
-    if __name__ == "__main__":
-        threading.Thread(target=run_scheduler, daemon=True).start()
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
