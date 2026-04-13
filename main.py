@@ -275,8 +275,7 @@ def run_playlist_builder(sp):
     # -------- PODCAST FUNCTION --------
     
     def get_podcast():
-        global played_episodes
-    
+
         show_queries = [
             "BBC Global News Podcast",
             "The Daily Aus Headlines",
@@ -284,43 +283,50 @@ def run_playlist_builder(sp):
             "What the Flux",
             "FT Tech Tonic"
         ]
-    
+
         random.shuffle(show_queries)
-    
+
+        candidates = []
+
         for query in show_queries:
             try:
-                results = sp.search(q=query, type="show", limit=3, market="AU")
+                results = sp.search(q=query, type="show", limit=2, market="AU")
                 shows = results["shows"]["items"]
-    
+
                 for show in shows:
-                    episodes = sp.show_episodes(show["id"], limit=5, market="AU")["items"]
-    
+                    episodes = sp.show_episodes(show["id"], limit=20, market="AU")["items"]
+
                     for ep in episodes:
-    
                         if ep["uri"] in played_episodes:
                             continue
-    
+
+                        # Optional filter for Daily Aus
                         if "daily aus" in query.lower():
                             title = ep["name"].lower()
                             if "headline" not in title and "wrap" not in title:
                                 continue
-    
-                        played_episodes.append(ep["uri"])
-                        save_json(EP_MEMORY_FILE, played_episodes, EP_MEMORY_SIZE)
-    
-                        return ep["uri"]
-    
+
+                        candidates.append(ep["uri"])
+
             except:
                 continue
-    
-        # fallback (always return something)
-        try:
-            results = sp.search(q="news podcast", type="show", limit=1, market="AU")
-            show = results["shows"]["items"][0]
-            ep = sp.show_episodes(show["id"], limit=1, market="AU")["items"][0]
-            return ep["uri"]
-        except:
-            return None
+
+        # remove anything already used THIS RUN (extra safety)
+        fresh_candidates = [
+            c for c in candidates
+            if c not in played_episodes
+        ]
+ 
+        if not fresh_candidates:
+            print("NO NEW PODCAST AVAILABLE — SKIPPING")
+        return None
+
+        chosen = random.choice(fresh_candidates)
+
+        played_episodes.append(chosen)
+        save_json(EP_MEMORY_FILE, played_episodes, EP_MEMORY_SIZE)
+
+        return chosen
     
     # -------- 5 BLOCK SYSTEM --------
     TOTAL_BLOCKS = 5
