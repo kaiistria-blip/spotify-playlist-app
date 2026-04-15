@@ -113,5 +113,14 @@ def debug_tokens():
     except Exception as e:
         return f"Error: {e}"
 
+@app.route("/reset_memory")
+def reset_memory():
+    try:
+        if os.path.exists("played_episodes.json"):
+            os.remove("played_episodes.json")
+        return "Episode memory cleared"
+    except Exception as e:
+        return str(e)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
