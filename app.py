@@ -116,6 +116,19 @@ def reset_tokens():
         shutil.rmtree("tokens")
     return "tokens cleared"
 
+@app.route("/")
+def home():
+    sp_oauth = get_oauth()
+
+    auth_url = sp_oauth.get_authorize_url(
+        scope="user-top-read playlist-modify-private playlist-modify-public user-library-read"
+    )
+
+    return f"""
+    <h2>Spotify Playlist App</h2>
+    <a href="{auth_url}">Login with Spotify</a>
+    """
+
 # ===== START =====
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
