@@ -105,6 +105,13 @@ def run_all():
     run_all_users()
     return "Updated all users"
 
+@app.route("/reset_tokens")
+def reset_tokens():
+    import shutil
+    if os.path.exists("tokens"):
+        shutil.rmtree("tokens")
+    return "tokens cleared"
+
 # ===== START =====
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
