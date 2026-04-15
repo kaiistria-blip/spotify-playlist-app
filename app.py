@@ -23,6 +23,7 @@ def get_oauth():
         client_secret=CLIENT_SECRET,
         redirect_uri=REDIRECT_URI,
         scope="user-top-read playlist-modify-private playlist-modify-public user-library-read",
+        cache_path=None,          # 🔥 IMPORTANT
         show_dialog=True
     )
 
