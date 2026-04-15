@@ -39,8 +39,11 @@ def callback():
     try:
         sp_oauth = get_oauth()
 
-        # 🔥 This handles token + scopes correctly
-        sp = spotipy.Spotify(auth_manager=sp_oauth)
+        # 🔥 THIS LINE IS THE KEY FIX
+        code = request.args.get("code")
+        token_info = sp_oauth.get_access_token(code)
+
+        sp = spotipy.Spotify(auth=token_info["access_token"])
 
         user_id = sp.current_user()["id"]
 
