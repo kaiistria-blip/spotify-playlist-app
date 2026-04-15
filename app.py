@@ -39,15 +39,21 @@ def callback():
     try:
         sp_oauth = get_oauth()
 
-        # 🔥 THIS LINE IS THE KEY FIX
         code = request.args.get("code")
         token_info = sp_oauth.get_access_token(code)
 
-        sp = spotipy.Spotify(auth=token_info["access_token"])
+        # ✅ CREATE TOKEN FOLDER
+        os.makedirs(TOKEN_DIR, exist_ok=True)
 
+        sp = spotipy.Spotify(auth=token_info["access_token"])
         user_id = sp.current_user()["id"]
 
-        print("LOGGED IN:", user_id)
+        # 🔥 SAVE TOKEN (CRITICAL)
+        with open(f"{TOKEN_DIR}/{user_id}.json", "w") as f:
+            json.dump(token_info, f)
+
+        print("TOKEN SAVED:", user_id)
+        print("SCOPES:", token_info.get("scope"))
 
         run_playlist_builder(sp)
 
