@@ -12,7 +12,7 @@ app = Flask(__name__)
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 REDIRECT_URI = os.environ.get("REDIRECT_URI")
-SCOPE = "user-top-read playlist-modify-private playlist-modify-public user-library-read"
+scope = "user-top-read playlist-modify-private playlist-modify-public user-library-read"
 
 TOKEN_DIR = "tokens"
 
@@ -22,8 +22,9 @@ def get_oauth():
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         redirect_uri=REDIRECT_URI,
-        scope=SCOPE,
-        open_browser=False
+        scope="user-top-read playlist-modify-private playlist-modify-public user-library-read",
+        open_browser=False,
+        show_dialog=True
     )
 
 # ===== HOME =====
