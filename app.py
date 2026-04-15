@@ -23,7 +23,6 @@ def get_oauth():
         client_secret=CLIENT_SECRET,
         redirect_uri=REDIRECT_URI,
         scope="user-top-read playlist-modify-private playlist-modify-public user-library-read",
-        open_browser=False,
         show_dialog=True
     )
 
@@ -37,20 +36,14 @@ def home():
 @app.route("/callback")
 def callback():
     try:
-        code = request.args.get("code")
         sp_oauth = get_oauth()
 
-        token_info = sp_oauth.get_access_token(code)
+        # 🔥 This handles token + scopes correctly
+        sp = spotipy.Spotify(auth_manager=sp_oauth)
 
-        os.makedirs(TOKEN_DIR, exist_ok=True)
-
-        sp = spotipy.Spotify(auth=token_info["access_token"])
         user_id = sp.current_user()["id"]
 
-        with open(f"{TOKEN_DIR}/{user_id}.json", "w") as f:
-            json.dump(token_info, f)
-
-        print(f"Saved token for {user_id}")
+        print("LOGGED IN:", user_id)
 
         run_playlist_builder(sp)
 
