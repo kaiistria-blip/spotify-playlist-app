@@ -105,5 +105,13 @@ def run_all():
 
     return "Updated all users"
 
+@app.route("/debug_tokens")
+def debug_tokens():
+    try:
+        files = os.listdir("tokens")
+        return f"Files: {files}"
+    except Exception as e:
+        return f"Error: {e}"
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
