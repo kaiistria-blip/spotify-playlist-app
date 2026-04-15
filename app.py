@@ -1,22 +1,22 @@
+import os
+import json
 from flask import Flask, request
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import json
-import os
 
 from main import run_playlist_builder
 
-if not os.path.exists("tokens"):
-    os.makedirs("tokens")
-
 app = Flask(__name__)
 
-CLIENT_ID = "3098f91adf5547ecb3214339a0e8bd51"
-CLIENT_SECRET = "a646012b50ad4fdd8218192ecec29632"
-REDIRECT_URI = "https://spotify-playlist-app-ntpf.onrender.com/callback"
+# ===== CONFIG =====
+CLIENT_ID = os.environ.get("CLIENT_ID")
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+REDIRECT_URI = os.environ.get("REDIRECT_URI")
+SCOPE = "user-top-read playlist-modify-private playlist-modify-public user-library-read"
 
-SCOPE = "playlist-modify-public playlist-modify-private playlist-read-private user-top-read playlist-read-collaborative"
+TOKEN_DIR = "tokens"
 
+# ===== OAUTH =====
 def get_oauth():
     return SpotifyOAuth(
         client_id=CLIENT_ID,
@@ -26,101 +26,85 @@ def get_oauth():
         open_browser=False
     )
 
+# ===== HOME =====
 @app.route("/")
 def home():
     auth_url = get_oauth().get_authorize_url()
     return f'<a href="{auth_url}">Login with Spotify</a>'
 
+# ===== CALLBACK =====
 @app.route("/callback")
 def callback():
-    code = request.args.get("code")
-    sp_oauth = get_oauth()
+    try:
+        code = request.args.get("code")
+        sp_oauth = get_oauth()
 
-    # 🔴 STEP 1: get token
-    token_info = sp_oauth.get_access_token(code)
+        token_info = sp_oauth.get_access_token(code)
 
-    # 🔴 STEP 2: save token (simple version)
-    os.makedirs("tokens", exist_ok=True)
+        os.makedirs(TOKEN_DIR, exist_ok=True)
 
-    sp = spotipy.Spotify(auth=token_info["access_token"])
-    user = sp.current_user()["id"]
+        sp = spotipy.Spotify(auth=token_info["access_token"])
+        user_id = sp.current_user()["id"]
 
-    with open(f"tokens/{user}.json", "w") as f:
-        json.dump(token_info, f)
+        with open(f"{TOKEN_DIR}/{user_id}.json", "w") as f:
+            json.dump(token_info, f)
 
-    # 🔴 STEP 3: create Spotify client
-    sp = spotipy.Spotify(auth=token_info["access_token"])
-    user = sp.current_user()["id"]
+        print(f"Saved token for {user_id}")
 
-    # 🔴 STEP 4: run your playlist system
-    run_playlist_builder(sp)
+        run_playlist_builder(sp)
 
-    return f"Playlist updated successfully for {user}"
+        return f"Playlist updated for {user_id}"
 
+    except Exception as e:
+        print("CALLBACK ERROR:", e)
+        return str(e)
+
+# ===== RUN ALL USERS =====
 def run_all_users():
-    for file in os.listdir("tokens"):
+    if not os.path.exists(TOKEN_DIR):
+        print("No token directory")
+        return
+
+    files = os.listdir(TOKEN_DIR)
+
+    if not files:
+        print("No users found")
+        return
+
+    for file in files:
         if not file.endswith(".json"):
             continue
 
-        path = f"tokens/{file}"
-
-        # skip empty files
-        if os.path.getsize(path) == 0:
-            print(f"Skipping empty file: {file}")
-            continue
+        path = f"{TOKEN_DIR}/{file}"
 
         try:
             with open(path, "r") as f:
                 token_info = json.load(f)
-        except Exception as e:
-            print(f"Skipping invalid JSON: {file} ({e})")
-            continue
 
-        sp = spotipy.Spotify(auth=token_info["access_token"])
+            # 🔥 CRITICAL: refresh token
+            sp_oauth = get_oauth()
+            token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
 
-        try:
+            # save refreshed token
+            with open(path, "w") as f:
+                json.dump(token_info, f)
+
+            sp = spotipy.Spotify(auth=token_info["access_token"])
+
             run_playlist_builder(sp)
+
             print(f"Updated: {file}")
+
         except Exception as e:
-            print(f"Failed for {file}: {e}")
+            print(f"FAILED: {file} -> {e}")
 
-is_running = False
-
-@app.route("/run_all", methods=["GET"])
+# ===== ROUTE =====
+@app.route("/run_all")
 def run_all():
-    global is_running
-
     print("RUN_ALL TRIGGERED")
-
-    if is_running:
-        print("Already running — skipping")
-        return "Already running"
-
-    is_running = True
-
-    try:
-        run_all_users()
-    finally:
-        is_running = False
-
+    run_all_users()
     return "Updated all users"
 
-@app.route("/debug_tokens")
-def debug_tokens():
-    try:
-        files = os.listdir("tokens")
-        return f"Files: {files}"
-    except Exception as e:
-        return f"Error: {e}"
-
-@app.route("/reset_memory")
-def reset_memory():
-    try:
-        if os.path.exists("played_episodes.json"):
-            os.remove("played_episodes.json")
-        return "Episode memory cleared"
-    except Exception as e:
-        return str(e)
-
+# ===== START =====
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
