@@ -9,8 +9,8 @@ from main import run_playlist_builder
 app = Flask(__name__)
 
 # ===== CONFIG =====
-CLIENT_ID = 3098f91adf5547ecb3214339a0e8bd51
-CLIENT_SECRET = a646012b50ad4fdd8218192ecec29632
+CLIENT_ID = "3098f91adf5547ecb3214339a0e8bd51"
+CLIENT_SECRET = "a646012b50ad4fdd8218192ecec29632"
 REDIRECT_URI = https://spotify-playlist-app-tyii.onrender.com/callback
 scope = "user-top-read playlist-modify-private playlist-modify-public user-library-read"
 
