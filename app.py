@@ -9,9 +9,9 @@ from main import run_playlist_builder
 app = Flask(__name__)
 
 # ===== CONFIG =====
-CLIENT_ID = os.environ.get("CLIENT_ID")
-CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-REDIRECT_URI = os.environ.get("REDIRECT_URI")
+CLIENT_ID = 3098f91adf5547ecb3214339a0e8bd51
+CLIENT_SECRET = a646012b50ad4fdd8218192ecec29632
+REDIRECT_URI = https://spotify-playlist-app-tyii.onrender.com/callback
 scope = "user-top-read playlist-modify-private playlist-modify-public user-library-read"
 
 TOKEN_DIR = "tokens"
@@ -23,7 +23,6 @@ def get_oauth():
         client_secret=CLIENT_SECRET,
         redirect_uri=REDIRECT_URI,
         scope="user-top-read playlist-modify-private playlist-modify-public user-library-read",
-        cache_path=None,          # 🔥 IMPORTANT
         show_dialog=True
     )
 
@@ -42,25 +41,15 @@ def callback():
         code = request.args.get("code")
         token_info = sp_oauth.get_access_token(code)
 
-        # ✅ CREATE TOKEN FOLDER
-        os.makedirs(TOKEN_DIR, exist_ok=True)
-
         sp = spotipy.Spotify(auth=token_info["access_token"])
+
         user_id = sp.current_user()["id"]
-
-        # 🔥 SAVE TOKEN (CRITICAL)
-        with open(f"{TOKEN_DIR}/{user_id}.json", "w") as f:
-            json.dump(token_info, f)
-
-        print("TOKEN SAVED:", user_id)
-        print("SCOPES:", token_info.get("scope"))
 
         run_playlist_builder(sp)
 
         return f"Playlist updated for {user_id}"
 
     except Exception as e:
-        print("CALLBACK ERROR:", e)
         return str(e)
 
 # ===== RUN ALL USERS =====
